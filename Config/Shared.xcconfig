@@ -1,0 +1,8 @@
+// Shared build settings. Private values live in Secrets.xcconfig next to this file:
+// it is in .gitignore and never gets into the repository. Template: Secrets.example.xcconfig.
+// Without it the project still builds, but Last.fm is disabled and the signing team has to be picked in Xcode.
+
+LASTFM_API_KEY =
+DEVELOPMENT_TEAM =
+
+#include? "Secrets.xcconfig"

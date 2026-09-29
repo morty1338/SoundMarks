@@ -1,0 +1,126 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>BGTaskSchedulerPermittedIdentifiers</key>
+	<array>
+		<string>com.bibadev.musicmap.refreshNotifications</string>
+	</array>
+	<key>CADisableMinimumFrameDurationOnPhone</key>
+	<true/>
+	<key>CFBundleDevelopmentRegion</key>
+	<string>$(DEVELOPMENT_LANGUAGE)</string>
+	<key>CFBundleDisplayName</key>
+	<string>SoundMarks</string>
+	<key>CFBundleDocumentTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleTypeName</key>
+			<string>SoundMarks</string>
+			<key>LSHandlerRank</key>
+			<string>Owner</string>
+			<key>LSItemContentTypes</key>
+			<array>
+				<string>com.bibadev.musicmap.soundmap</string>
+			</array>
+		</dict>
+		<dict>
+			<key>CFBundleTypeName</key>
+			<string>Streaming history archive</string>
+			<key>LSHandlerRank</key>
+			<string>Alternate</string>
+			<key>LSItemContentTypes</key>
+			<array>
+				<string>public.zip-archive</string>
+				<string>public.json</string>
+			</array>
+		</dict>
+	</array>
+	<key>CFBundleExecutable</key>
+	<string>$(EXECUTABLE_NAME)</string>
+	<key>CFBundleIdentifier</key>
+	<string>$(PRODUCT_BUNDLE_IDENTIFIER)</string>
+	<key>CFBundleInfoDictionaryVersion</key>
+	<string>6.0</string>
+	<key>CFBundleName</key>
+	<string>$(PRODUCT_NAME)</string>
+	<key>CFBundlePackageType</key>
+	<string>$(PRODUCT_BUNDLE_PACKAGE_TYPE)</string>
+	<key>CFBundleShortVersionString</key>
+	<string>$(MARKETING_VERSION)</string>
+	<key>CFBundleVersion</key>
+	<string>$(CURRENT_PROJECT_VERSION)</string>
+	<key>LSRequiresIPhoneOS</key>
+	<true/>
+	<key>LSSupportsOpeningDocumentsInPlace</key>
+	<false/>
+	<key>NSAppleMusicUsageDescription</key>
+	<string>To recognize the track that is playing right now and add it to a place.</string>
+	<key>NSBonjourServices</key>
+	<array>
+		<string>_soundmap._tcp</string>
+		<string>_soundmap._udp</string>
+	</array>
+	<key>NSCameraUsageDescription</key>
+	<string>To scan a friend’s QR code and add them.</string>
+	<key>NSLocalNetworkUsageDescription</key>
+	<string>To add friends nearby and exchange maps directly between phones, without a server.</string>
+	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
+	<string>To remind you of a track when you’re back at a marked place and to record your trip route. Your location never leaves the device.</string>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>To mark the place where you’re listening to music at your current location.</string>
+	<key>NSPhotoLibraryAddUsageDescription</key>
+	<string>To save a place card to your photo library.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>To attach photos and videos to places on the map and find old memories by the date and location of your shots. Photos stay on the device.</string>
+	<key>NSUbiquitousContainers</key>
+	<dict/>
+	<key>NSUserTrackingUsageDescription</key>
+	<string>The app doesn’t track you and doesn’t use advertising identifiers.</string>
+	<key>UIApplicationSupportsIndirectInputEvents</key>
+	<true/>
+	<key>UIBackgroundModes</key>
+	<array>
+		<string>location</string>
+		<string>remote-notification</string>
+		<string>processing</string>
+	</array>
+	<key>UILaunchScreen</key>
+	<dict>
+		<key>UIColorName</key>
+		<string>SplashBackground</string>
+	</dict>
+	<key>UISupportedInterfaceOrientations</key>
+	<array>
+		<string>UIInterfaceOrientationPortrait</string>
+	</array>
+	<key>UIUserInterfaceStyle</key>
+	<string>Automatic</string>
+	<key>UTExportedTypeDeclarations</key>
+	<array>
+		<dict>
+			<key>UTTypeConformsTo</key>
+			<array>
+				<string>public.data</string>
+			</array>
+			<key>UTTypeDescription</key>
+			<string>SoundMarks</string>
+			<key>UTTypeIdentifier</key>
+			<string>com.bibadev.musicmap.soundmap</string>
+			<key>UTTypeTagSpecification</key>
+			<dict>
+				<key>public.filename-extension</key>
+				<array>
+					<string>soundmap</string>
+				</array>
+				<key>public.mime-type</key>
+				<array>
+					<string>application/x-soundmap</string>
+				</array>
+			</dict>
+		</dict>
+	</array>
+	<key>LastFmAPIKey</key>
+	<string>$(LASTFM_API_KEY)</string>
+</dict>
+</plist>

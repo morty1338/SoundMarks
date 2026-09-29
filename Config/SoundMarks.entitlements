@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<!--
+	  CloudKit and push get enabled once there is a paid Apple Developer account.
+	  A personal team doesn't grant the iCloud and Push Notifications capabilities,
+	  so the build can't be signed with these keys.
+
+	  Then these come back here:
+	    com.apple.developer.icloud-container-identifiers = [iCloud.com.bibadev.musicmap]
+	    com.apple.developer.icloud-services = [CloudKit]
+	    aps-environment = development
+	  and CloudKitConfiguration.isEnabled is switched to true.
+	-->
+</dict>
+</plist>

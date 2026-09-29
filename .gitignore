@@ -1,0 +1,34 @@
+# Private build values: Last.fm key, Team ID. Template: Config/Secrets.example.xcconfig
+Config/Secrets.xcconfig
+
+# macOS
+.DS_Store
+
+# Xcode
+xcuserdata/
+*.xcscmblueprint
+*.xccheckout
+DerivedData/
+build/
+*.moved-aside
+*.xcresult
+*.ipa
+*.dSYM.zip
+*.dSYM
+timeline.xctimeline
+playground.xcworkspace
+
+# Swift Package Manager
+.build/
+.swiftpm/
+Packages/
+Package.resolved
+
+# Instruments results
+*.trace
+
+# fastlane
+fastlane/report.xml
+fastlane/Preview.html
+fastlane/screenshots/**/*.png
+fastlane/test_output
