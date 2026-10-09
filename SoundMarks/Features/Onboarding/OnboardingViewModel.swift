@@ -137,6 +137,14 @@ final class OnboardingViewModel {
         await loadAvailableYears()
     }
 
+    /// Re-reads the status after returning from Settings: iOS shows the system request only once.
+    func refreshPhotoAccess() async {
+        let current = await environment.photos.authorization
+        guard current != photoAuthorization else { return }
+        photoAuthorization = current
+        await loadAvailableYears()
+    }
+
     /// Years that have both plays and geotagged photos.
     func loadAvailableYears() async {
         let historyYears = Set(await PlayHistoryStore.shared.yearsWithPlays())

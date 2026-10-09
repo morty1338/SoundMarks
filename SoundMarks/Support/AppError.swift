@@ -79,7 +79,7 @@ enum AppError: LocalizedError, Equatable {
                    defaultValue: "Search for the track manually.")
         case .importFileUnreadable:
             String(localized: "error.importFileUnreadable.recovery",
-                   defaultValue: "Make sure this is the Extended Streaming History archive from your Spotify data export.")
+                   defaultValue: "Pick the ZIP from your Spotify data export or a StreamingHistory_music / Streaming_History_Audio JSON file from it.")
         case .lastFmNotConfigured:
             String(localized: "error.lastFmNotConfigured.recovery",
                    defaultValue: "Import your Spotify history — it works without a key.")

@@ -1,36 +1,58 @@
 import SwiftUI
 
 /// Feed of candidate cards: swipe right — add, left — skip.
+///
+/// The preview of the top card starts by itself; the next card's preview is loaded in advance.
 struct CandidateFeedView: View {
     @Environment(AppEnvironment.self) private var environment
+    @Environment(\.openURL) private var openURL
 
     let scanner: MemoryScanner
     let onDone: () -> Void
 
     @State private var model: CandidateFeedViewModel?
+    @State private var player = PreviewAudioPlayer()
     @State private var dragOffset: CGSize = .zero
+    @State private var isPastThreshold = false
     @State private var isPickingTrack = false
+    /// Cards that already flew away. Confirmation saves asynchronously — without this
+    /// the next card would show up for a moment at the flown-away offset.
+    @State private var departedIDs: Set<UUID> = []
+
+    private static let threshold: CGFloat = 110
+    private static let skipTint = Color(red: 1.0, green: 0.38, blue: 0.42)
 
     var body: some View {
-        Group {
+        ZStack {
+            background
+
             if let model {
-                if let candidate = model.candidates.first {
-                    feed(model: model, candidate: candidate)
+                let visible = model.candidates.filter { !departedIDs.contains($0.id) }
+                if let candidate = visible.first {
+                    feed(model: model, candidate: candidate, next: visible.dropFirst().first,
+                         remaining: visible.count)
                 } else {
                     summary(model)
+                        .onAppear { player.stop() }
                 }
             } else {
                 ProgressView()
+                    .tint(.white)
             }
         }
+        .environment(\.colorScheme, .dark)
         .navigationTitle(Text("candidates.title", comment: "Candidate feed title"))
         .navigationBarTitleDisplayMode(.inline)
+        .toolbarBackground(DS.Colors.space, for: .navigationBar)
+        .toolbarBackground(.visible, for: .navigationBar)
+        .toolbarColorScheme(.dark, for: .navigationBar)
         .task {
             guard model == nil else { return }
             let created = CandidateFeedViewModel(scanner: scanner, environment: environment)
             model = created
             await created.geocodeUpcoming()
         }
+        .onDisappear { player.stop() }
         .alert(Text("root.error.title", comment: "Error title"),
                isPresented: Binding(get: { model?.errorMessage != nil },
                                     set: { if !$0 { model?.errorMessage = nil } })) {
@@ -42,135 +64,228 @@ struct CandidateFeedView: View {
         }
     }
 
+    private var background: some View {
+        ZStack {
+            DS.Colors.space
+            RadialGradient(colors: [DS.Colors.marks.opacity(0.16), .clear],
+                           center: .top, startRadius: 10, endRadius: 520)
+        }
+        .ignoresSafeArea()
+    }
+
     // MARK: - Feed
 
-    private func feed(model: CandidateFeedViewModel, candidate: MemoryCandidate) -> some View {
-        VStack(spacing: 16) {
-            HStack {
-                Text(String(localized: "candidates.remaining",
-                             defaultValue: "Left: \(model.candidates.count)"))
-                    .font(.footnote)
-                    .foregroundStyle(.secondary)
-                Spacer()
-                Text(String(localized: "candidates.added",
-                             defaultValue: "Added: \(model.confirmedCount)"))
-                    .font(.footnote)
-                    .foregroundStyle(.secondary)
-            }
-            .padding(.horizontal, 20)
+    private struct PlaybackKey: Hashable {
+        let candidateID: UUID
+        let trackIndex: Int
+    }
+
+    private func feed(model: CandidateFeedViewModel,
+                      candidate: MemoryCandidate,
+                      next: MemoryCandidate?,
+                      remaining: Int) -> some View {
+        let entry = model.catalogEntry(for: candidate)
+        let previewURL = entry?.previewURL
+        let progress = min(1, abs(dragOffset.width) / Self.threshold)
+
+        return VStack(spacing: DS.Spacing.l) {
+            counters(remaining: remaining, added: model.confirmedCount)
 
             ZStack {
-                // The next card peeks from the edge — it's clear the feed continues.
-                if model.candidates.count > 1 {
-                    CandidateCardView(candidate: model.candidates[1], loader: environment.mediaLoader)
-                        .scaleEffect(0.95)
-                        .opacity(0.5)
+                // The next card waits underneath and grows as the top one is dragged away.
+                if let next {
+                    CandidateCardView(candidate: next,
+                                      loader: environment.mediaLoader,
+                                      artworkURL: model.catalogEntry(for: next)?.artworkURL)
+                        .id(next.id)
+                        .scaleEffect(0.93 + 0.07 * progress)
+                        .offset(y: 14 * (1 - progress))
                         .allowsHitTesting(false)
+                        .accessibilityHidden(true)
                 }
 
-                CandidateCardView(candidate: candidate, loader: environment.mediaLoader)
+                CandidateCardView(candidate: candidate,
+                                  loader: environment.mediaLoader,
+                                  artworkURL: entry?.artworkURL,
+                                  hasPreview: previewURL != nil,
+                                  isPlaying: previewURL != nil && player.currentURL == previewURL && player.isPlaying,
+                                  onTogglePlayback: {
+                                      if let previewURL { player.toggle(previewURL) }
+                                  },
+                                  onPickTrack: { isPickingTrack = true })
+                    .id(candidate.id)
+                    .overlay(alignment: .topLeading) {
+                        stamp("candidates.add", color: DS.Colors.marks, angle: -14)
+                            .opacity(dragOffset.width > 0 ? progress : 0)
+                            .padding(.top, 44)
+                            .padding(.leading, DS.Spacing.l)
+                    }
+                    .overlay(alignment: .topTrailing) {
+                        stamp("candidates.skip", color: Self.skipTint, angle: 14)
+                            .opacity(dragOffset.width < 0 ? progress : 0)
+                            .padding(.top, 44)
+                            .padding(.trailing, DS.Spacing.l)
+                    }
                     .offset(dragOffset)
-                    .rotationEffect(.degrees(Double(dragOffset.width / 22)))
-                    .overlay(alignment: .topLeading) { decisionBadge }
+                    .rotationEffect(.degrees(Double(dragOffset.width / 20)), anchor: .bottom)
                     .gesture(
                         DragGesture()
-                            .onChanged { dragOffset = $0.translation }
-                            .onEnded { value in decide(value.translation.width, model: model, candidate: candidate) }
+                            .onChanged { value in
+                                dragOffset = value.translation
+                                let past = abs(value.translation.width) > Self.threshold
+                                if past != isPastThreshold {
+                                    isPastThreshold = past
+                                    if past { Haptics.select() }
+                                }
+                            }
+                            .onEnded { value in
+                                isPastThreshold = false
+                                decide(value.translation.width, model: model, candidate: candidate)
+                            }
                     )
-                    .animation(.spring(response: 0.3, dampingFraction: 0.8), value: dragOffset)
+                    .animation(DS.Motion.quick, value: dragOffset)
+                    .accessibilityAction(named: Text("candidates.add", comment: "Add")) {
+                        commit(direction: 1, model: model, candidate: candidate)
+                    }
+                    .accessibilityAction(named: Text("candidates.skip", comment: "Skip")) {
+                        commit(direction: -1, model: model, candidate: candidate)
+                    }
             }
-            .padding(.horizontal, 20)
+            .padding(.horizontal, DS.Spacing.m)
+            .frame(maxHeight: .infinity)
 
-            trackPicker(model: model, candidate: candidate)
-
-            HStack(spacing: 18) {
-                decisionButton(system: "xmark", tint: .secondary) {
-                    commit(direction: -1, model: model, candidate: candidate)
-                }
-                decisionButton(system: "checkmark", tint: .accentColor) {
-                    commit(direction: 1, model: model, candidate: candidate)
+            actions(model: model, candidate: candidate)
+        }
+        .padding(.bottom, DS.Spacing.m)
+        .confirmationDialog(
+            Text("candidates.pickTrack", comment: "Pick another track"),
+            isPresented: $isPickingTrack,
+            titleVisibility: .visible
+        ) {
+            ForEach(Array(candidate.trackOptions.enumerated()), id: \.offset) { index, option in
+                Button("\(option.title) — \(option.artist)") {
+                    model.selectTrack(at: index, for: candidate)
                 }
             }
-            .padding(.bottom, 12)
         }
         .task(id: candidate.id) {
             await model.geocodeUpcoming()
         }
-    }
-
-    @ViewBuilder
-    private var decisionBadge: some View {
-        if abs(dragOffset.width) > 40 {
-            let isAdding = dragOffset.width > 0
-            Text(isAdding ? "candidates.add" : "candidates.skip")
-                .font(.caption.weight(.bold))
-                .padding(.horizontal, 12)
-                .padding(.vertical, 6)
-                .background(isAdding ? AnyShapeStyle(.tint) : AnyShapeStyle(.secondary), in: Capsule())
-                .foregroundStyle(.white)
-                .padding(16)
-                .opacity(min(1, abs(dragOffset.width) / 110))
-        }
-    }
-
-    private func trackPicker(model: CandidateFeedViewModel, candidate: MemoryCandidate) -> some View {
-        Group {
-            if candidate.trackOptions.count > 1 {
-                Button {
-                    isPickingTrack = true
-                } label: {
-                    Label {
-                        Text(String(localized: "candidates.otherTracks",
-                                     defaultValue: "\(candidate.trackOptions.count - 1) more matches"))
-                    } icon: {
-                        Image(systemName: "arrow.triangle.2.circlepath")
-                    }
-                    .font(.footnote)
-                }
-                .confirmationDialog(
-                    Text("candidates.pickTrack", comment: "Pick another track"),
-                    isPresented: $isPickingTrack,
-                    titleVisibility: .visible
-                ) {
-                    ForEach(Array(candidate.trackOptions.enumerated()), id: \.offset) { index, option in
-                        Button("\(option.title) — \(option.artist)") {
-                            model.selectTrack(at: index, for: candidate)
-                        }
-                    }
-                }
+        .task(id: PlaybackKey(candidateID: candidate.id, trackIndex: candidate.selectedTrackIndex)) {
+            await model.loadCatalogUpcoming()
+            guard !Task.isCancelled else { return }
+            if let url = model.catalogEntry(for: candidate)?.previewURL {
+                if player.currentURL != url { player.play(url) }
+            } else {
+                player.stop()
             }
         }
     }
 
-    private func decisionButton(system: String, tint: Color, action: @escaping () -> Void) -> some View {
-        Button(action: action) {
-            Image(systemName: system)
-                .font(.system(size: 20, weight: .semibold))
-                .frame(width: 58, height: 58)
-                .background(.regularMaterial, in: Circle())
-                .foregroundStyle(tint)
+    private func counters(remaining: Int, added: Int) -> some View {
+        HStack(spacing: DS.Spacing.m) {
+            Label {
+                Text(String(localized: "candidates.remaining", defaultValue: "Left: \(remaining)"))
+            } icon: {
+                Image(systemName: "rectangle.stack")
+            }
+            Label {
+                Text(String(localized: "candidates.added", defaultValue: "Added: \(added)"))
+            } icon: {
+                Image(systemName: "mappin.circle")
+            }
+            .foregroundStyle(DS.Colors.marks)
         }
-        .buttonStyle(.plain)
-        .accessibilityLabel(system == "checkmark"
-            ? Text("candidates.add", comment: "Add")
-            : Text("candidates.skip", comment: "Skip"))
+        .font(.footnote.weight(.semibold))
+        .foregroundStyle(DS.Colors.onDarkSecondary)
+        .padding(.horizontal, DS.Spacing.m)
+        .padding(.vertical, DS.Spacing.s)
+        .liquidGlass(in: Capsule())
+        .padding(.top, DS.Spacing.s)
     }
 
+    /// Tinder-style stamp that shows up while dragging.
+    private func stamp(_ key: LocalizedStringKey, color: Color, angle: Double) -> some View {
+        Text(key)
+            .font(.system(size: 28, weight: .heavy))
+            .textCase(.uppercase)
+            .foregroundStyle(color)
+            .padding(.horizontal, 12)
+            .padding(.vertical, 4)
+            .overlay(RoundedRectangle(cornerRadius: 10, style: .continuous)
+                .strokeBorder(color, lineWidth: 4))
+            .rotationEffect(.degrees(angle))
+            .allowsHitTesting(false)
+            .accessibilityHidden(true)
+    }
+
+    private func actions(model: CandidateFeedViewModel, candidate: MemoryCandidate) -> some View {
+        HStack(spacing: DS.Spacing.l) {
+            roundButton(systemImage: "xmark", tint: Self.skipTint, labelKey: "candidates.skip") {
+                commit(direction: -1, model: model, candidate: candidate)
+            }
+
+            if let play = candidate.selectedTrack, let url = SpotifyLink.url(for: play) {
+                Button {
+                    Haptics.tap()
+                    player.stop()
+                    openURL(url)
+                } label: {
+                    HStack(spacing: 6) {
+                        Image(systemName: "arrow.up.right")
+                            .font(.system(size: 13, weight: .bold))
+                        Text(verbatim: "Spotify")
+                            .font(.subheadline.weight(.bold))
+                    }
+                    .foregroundStyle(.black)
+                    .padding(.horizontal, DS.Spacing.l)
+                    .frame(height: DS.Size.tapTarget + 4)
+                    .background(DS.Colors.spotify, in: Capsule())
+                }
+                .buttonStyle(.plain)
+                .accessibilityLabel(Text("candidates.openSpotify", comment: "Listen on Spotify"))
+            }
+
+            roundButton(systemImage: "checkmark", tint: DS.Colors.marks, labelKey: "candidates.add") {
+                commit(direction: 1, model: model, candidate: candidate)
+            }
+        }
+    }
+
+    private func roundButton(systemImage: String,
+                             tint: Color,
+                             labelKey: LocalizedStringKey,
+                             action: @escaping () -> Void) -> some View {
+        Button(action: action) {
+            Image(systemName: systemImage)
+                .font(.system(size: 24, weight: .bold))
+                .foregroundStyle(tint)
+                .frame(width: 66, height: 66)
+                .contentShape(Circle())
+        }
+        .buttonStyle(.plain)
+        .liquidGlass(in: Circle())
+        .accessibilityLabel(Text(labelKey))
+    }
+
+    // MARK: - Summary
+
     private func summary(_ model: CandidateFeedViewModel) -> some View {
-        VStack(spacing: 20) {
+        VStack(spacing: DS.Spacing.l) {
             Spacer()
 
             Image(systemName: model.confirmedCount > 0 ? "checkmark.circle" : "tray")
                 .font(.system(size: 54, weight: .light))
-                .foregroundStyle(.tint)
+                .foregroundStyle(DS.Colors.marks)
 
             Text("candidates.done.title", comment: "The feed is over")
                 .font(.title3.weight(.semibold))
+                .foregroundStyle(DS.Colors.onDarkText)
 
             Text(String(localized: "candidates.done.body",
                         defaultValue: "Added \(model.confirmedCount), skipped \(model.skippedCount)."))
                 .font(.subheadline)
-                .foregroundStyle(.secondary)
+                .foregroundStyle(DS.Colors.onDarkSecondary)
                 .multilineTextAlignment(.center)
                 .padding(.horizontal, 32)
 
@@ -184,10 +299,12 @@ struct CandidateFeedView: View {
             } label: {
                 Text("candidates.done.action", comment: "Open the map")
                     .font(.headline)
+                    .foregroundStyle(DS.Colors.vinyl)
                     .frame(maxWidth: .infinity)
-                    .padding(.vertical, 14)
+                    .padding(.vertical, 16)
+                    .background(DS.Colors.marks, in: Capsule())
             }
-            .buttonStyle(.borderedProminent)
+            .buttonStyle(.plain)
             .padding(.horizontal, 24)
             .padding(.bottom, 24)
         }
@@ -196,10 +313,9 @@ struct CandidateFeedView: View {
     // MARK: - Decisions
 
     private func decide(_ width: CGFloat, model: CandidateFeedViewModel, candidate: MemoryCandidate) {
-        let threshold: CGFloat = 110
-        if width > threshold {
+        if width > Self.threshold {
             commit(direction: 1, model: model, candidate: candidate)
-        } else if width < -threshold {
+        } else if width < -Self.threshold {
             commit(direction: -1, model: model, candidate: candidate)
         } else {
             dragOffset = .zero
@@ -207,18 +323,30 @@ struct CandidateFeedView: View {
     }
 
     private func commit(direction: CGFloat, model: CandidateFeedViewModel, candidate: MemoryCandidate) {
-        withAnimation(.easeOut(duration: 0.2)) {
-            dragOffset = CGSize(width: direction * 600, height: 0)
+        guard !departedIDs.contains(candidate.id) else { return }
+        if direction > 0 { Haptics.success() } else { Haptics.tap() }
+
+        withAnimation(.easeOut(duration: 0.22)) {
+            dragOffset = CGSize(width: direction * 700, height: dragOffset.height + 40)
         }
 
         Task {
-            try? await Task.sleep(for: .milliseconds(180))
+            try? await Task.sleep(for: .milliseconds(200))
+            // The next card takes the place without animation — it is already under the flown-away one.
+            var transaction = Transaction()
+            transaction.disablesAnimations = true
+            withTransaction(transaction) {
+                departedIDs.insert(candidate.id)
+                dragOffset = .zero
+            }
+
             if direction > 0 {
                 await model.confirm(candidate)
             } else {
                 model.skip(candidate)
             }
-            dragOffset = .zero
+            // Gone from the feed — the marker isn't needed; saving failed — the card comes back.
+            departedIDs.remove(candidate.id)
         }
     }
 }

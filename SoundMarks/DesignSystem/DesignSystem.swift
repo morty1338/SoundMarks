@@ -18,6 +18,8 @@ enum DS {
         /// The "My Marks" and "Friends Marks" titles and related buttons are light green.
         static let marks = Color(red: 0.66, green: 0.93, blue: 0.56)
         static let marksShade = Color(red: 0.42, green: 0.80, blue: 0.40)
+        /// "Listen on Spotify" button — the service's own green.
+        static let spotify = Color(red: 0.11, green: 0.73, blue: 0.33)
         /// Glow of a place dot on the planet.
         static let placeGlow = Color(red: 1.0, green: 0.82, blue: 0.55)
 

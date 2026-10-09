@@ -9,10 +9,13 @@ final class CandidateFeedViewModel {
     private(set) var confirmedCount = 0
     private(set) var skippedCount = 0
     var errorMessage: String?
+    /// Catalog data (artwork, 30-second preview) by `catalogKey`.
+    private(set) var catalog: [String: TrackMetadata] = [:]
 
     @ObservationIgnored let scanner: MemoryScanner
     @ObservationIgnored private let environment: AppEnvironment
     @ObservationIgnored private var geocodedIDs: Set<UUID> = []
+    @ObservationIgnored private var requestedCatalogKeys: Set<String> = []
 
     init(scanner: MemoryScanner, environment: AppEnvironment) {
         self.scanner = scanner
@@ -29,6 +32,29 @@ final class CandidateFeedViewModel {
             let info = await environment.location.placeInfo(for: candidate.coordinate)
             scanner.updatePlaceInfo(candidateID: candidate.id, info: info)
         }
+    }
+
+    /// Artwork and preview of the card's selected track, once loaded.
+    func catalogEntry(for candidate: MemoryCandidate) -> TrackMetadata? {
+        candidate.selectedTrack.flatMap { catalog[Self.catalogKey($0)] }
+    }
+
+    /// Loads artwork and preview for the nearest cards, the current one first —
+    /// so the next card starts playing without a pause.
+    func loadCatalogUpcoming(limit: Int = 2) async {
+        for candidate in candidates.prefix(limit) {
+            guard let play = candidate.selectedTrack else { continue }
+            let key = Self.catalogKey(play)
+            guard !requestedCatalogKeys.contains(key) else { continue }
+            requestedCatalogKeys.insert(key)
+            if let found = try? await environment.metadata.metadata(artist: play.artist, title: play.title) {
+                catalog[key] = found
+            }
+        }
+    }
+
+    private static func catalogKey(_ play: PlayRecord) -> String {
+        "\(play.artist)|\(play.title)"
     }
 
     func selectTrack(at index: Int, for candidate: MemoryCandidate) {
@@ -102,9 +128,12 @@ final class CandidateFeedViewModel {
 
     /// Enriches the track with artwork and a 30-second preview.
     private func enrich(track: Track, with play: PlayRecord) async {
-        guard let metadata = try? await environment.metadata.metadata(artist: play.artist,
-                                                                     title: play.title)
-        else { return }
+        // Usually already loaded for the card — no second request then.
+        var metadata = catalog[Self.catalogKey(play)]
+        if metadata == nil {
+            metadata = try? await environment.metadata.metadata(artist: play.artist, title: play.title)
+        }
+        guard let metadata else { return }
         track.artworkURL = metadata.artworkURL?.absoluteString
         track.previewURL = metadata.previewURL?.absoluteString
         try? environment.persistence.save()

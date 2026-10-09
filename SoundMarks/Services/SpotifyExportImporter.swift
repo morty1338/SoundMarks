@@ -1,6 +1,10 @@
 import Foundation
 
-/// Import of Extended Streaming History from Spotify's data export.
+/// Import of streaming history from Spotify's data export.
+///
+/// Both exports are understood: Extended Streaming History (`Streaming_History_Audio_*.json`,
+/// the whole account lifetime) and the short Account data export
+/// (`StreamingHistory_music_*.json`, the last year).
 ///
 /// The Web API isn't involved: the user requests the archive on the account's privacy
 /// page, Spotify sends a ZIP with JSON files, the app
@@ -88,7 +92,8 @@ final class SpotifyExportImporter: StreamingHistoryImporting {
 
     // MARK: - Parsing the file
 
-    /// Contents of all `Streaming_History_Audio_*.json` files.
+    /// Contents of all music history files: `Streaming_History_Audio_*.json` (Extended)
+    /// or `StreamingHistory_music_*.json` (Account data).
     /// Accepts both a ZIP and a single JSON — the user may have unpacked the archive.
     private static func streamingHistoryPayloads(at url: URL) throws -> [Data] {
         let data = try Data(contentsOf: url, options: .mappedIfSafe)
@@ -104,6 +109,8 @@ final class SpotifyExportImporter: StreamingHistoryImporting {
             guard name.lowercased().hasSuffix(".json"), !name.hasPrefix(".") else { return false }
             return name.hasPrefix("Streaming_History_Audio")
                 || name.hasPrefix("endsong")
+                // Account data: `StreamingHistory_music_0.json`, older exports `StreamingHistory0.json`.
+                || (name.hasPrefix("StreamingHistory") && !name.lowercased().contains("podcast"))
         }
 
         return try wanted.map { try archive.contents(of: $0) }
@@ -135,7 +142,16 @@ final class SpotifyExportImporter: StreamingHistoryImporting {
         return formatter
     }()
 
-    /// One Extended Streaming History entry.
+    /// `endTime` of the Account data export: "2024-03-01 18:22", in UTC.
+    nonisolated(unsafe) private static let accountDataDate: DateFormatter = {
+        let formatter = DateFormatter()
+        formatter.locale = Locale(identifier: "en_US_POSIX")
+        formatter.timeZone = TimeZone(identifier: "UTC")
+        formatter.dateFormat = "yyyy-MM-dd HH:mm"
+        return formatter
+    }()
+
+    /// One history entry — from the Extended or the Account data export.
     private struct Entry: Decodable {
         let ts: Date
         let msPlayed: Int?
@@ -144,6 +160,7 @@ final class SpotifyExportImporter: StreamingHistoryImporting {
         let albumName: String?
         let trackURI: String?
 
+        /// Extended Streaming History.
         enum CodingKeys: String, CodingKey {
             case ts
             case msPlayed = "ms_played"
@@ -151,6 +168,37 @@ final class SpotifyExportImporter: StreamingHistoryImporting {
             case artistName = "master_metadata_album_artist_name"
             case albumName = "master_metadata_album_album_name"
             case trackURI = "spotify_track_uri"
+        }
+
+        /// Account data: no album and no URI. `endTime` is, like `ts`, the moment playback stopped.
+        enum AccountDataKeys: String, CodingKey {
+            case endTime, msPlayed, trackName, artistName
+        }
+
+        init(from decoder: Decoder) throws {
+            let extended = try decoder.container(keyedBy: CodingKeys.self)
+            if extended.contains(.ts) {
+                ts = try extended.decode(Date.self, forKey: .ts)
+                msPlayed = try extended.decodeIfPresent(Int.self, forKey: .msPlayed)
+                trackName = try extended.decodeIfPresent(String.self, forKey: .trackName)
+                artistName = try extended.decodeIfPresent(String.self, forKey: .artistName)
+                albumName = try extended.decodeIfPresent(String.self, forKey: .albumName)
+                trackURI = try extended.decodeIfPresent(String.self, forKey: .trackURI)
+                return
+            }
+
+            let short = try decoder.container(keyedBy: AccountDataKeys.self)
+            let raw = try short.decode(String.self, forKey: .endTime)
+            guard let date = SpotifyExportImporter.accountDataDate.date(from: raw) else {
+                throw DecodingError.dataCorruptedError(forKey: .endTime, in: short,
+                                                       debugDescription: "unexpected endTime \(raw)")
+            }
+            ts = date
+            msPlayed = try short.decodeIfPresent(Int.self, forKey: .msPlayed)
+            trackName = try short.decodeIfPresent(String.self, forKey: .trackName)
+            artistName = try short.decodeIfPresent(String.self, forKey: .artistName)
+            albumName = nil
+            trackURI = nil
         }
 
         /// `nil` for podcasts and empty entries — they have no track name.

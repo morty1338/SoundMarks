@@ -21,9 +21,9 @@
 		AA0000000000000000000002 /* SoundMarksTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = SoundMarksTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		AA0000000000000000000003 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		AA0000000000000000000004 /* SoundMarks.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = SoundMarks.entitlements; sourceTree = "<group>"; };
+		AA0000000000000000000005 /* music-map-prompt.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = "music-map-prompt.md"; sourceTree = "<group>"; };
 		AA0000000000000000000007 /* Shared.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Shared.xcconfig; sourceTree = "<group>"; };
 		AA0000000000000000000008 /* Secrets.example.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Secrets.example.xcconfig; sourceTree = "<group>"; };
-		AA0000000000000000000005 /* music-map-prompt.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = "music-map-prompt.md"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
@@ -160,7 +160,7 @@
 			hasScannedForEncodings = 0;
 			knownRegions = (
 				en,
-				ru,
+				uk,
 				de,
 				Base,
 			);

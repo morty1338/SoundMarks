@@ -77,6 +77,56 @@ struct SpotifyExportImporterTests {
         #expect(summary.playCount == 1)
     }
 
+    @Test("A JSON from the Account data export is parsed")
+    func importsAccountDataJSON() async throws {
+        let (importer, store) = makeImporter()
+        defer { Task { await store.removeAll() } }
+
+        let data = try payload([
+            ["endTime": "2024-03-01 18:22", "artistName": "Daft Punk",
+             "trackName": "Instant Crush", "msPlayed": 213_000],
+            ["endTime": "2024-03-01 18:25", "artistName": "Daft Punk",
+             "trackName": "Get Lucky", "msPlayed": 5_000],
+        ])
+        let url = try temporaryFile(named: "StreamingHistory_music_0.json", contents: data)
+        defer { try? FileManager.default.removeItem(at: url) }
+
+        let summary = try await importer.importArchive(at: url)
+        #expect(summary.playCount == 1)
+        #expect(summary.skippedShortPlays == 1)
+
+        let year = DateInterval(start: Date(timeIntervalSince1970: 1_704_067_200), duration: 366 * 86_400)
+        let record = try #require(await importer.plays(in: year).first)
+        #expect(record.title == "Instant Crush")
+        #expect(record.artist == "Daft Punk")
+        #expect(record.playedAt == Date(timeIntervalSince1970: 1_709_317_320))
+        #expect(record.album == nil)
+    }
+
+    @Test("A ZIP from the Account data export is parsed, podcasts are skipped")
+    func importsAccountDataZIP() async throws {
+        let (importer, store) = makeImporter()
+        defer { Task { await store.removeAll() } }
+
+        let music = try payload([["endTime": "2024-03-01 18:22", "artistName": "Daft Punk",
+                                  "trackName": "Instant Crush", "msPlayed": 213_000]])
+        let podcast = try payload([["endTime": "2024-03-02 08:00", "podcastName": "Show",
+                                    "episodeName": "Episode", "msPlayed": 900_000]])
+        let zip = ZIPBuilder()
+            .adding(name: "Spotify Account Data/StreamingHistory_music_0.json",
+                    contents: music, compressed: true)
+            .adding(name: "Spotify Account Data/StreamingHistory_podcast_0.json",
+                    contents: podcast, compressed: true)
+            .adding(name: "Spotify Account Data/Userdata.json",
+                    contents: Data(#"{"username":"x"}"#.utf8), compressed: false)
+            .build()
+        let url = try temporaryFile(named: "my_spotify_data.zip", contents: zip)
+        defer { try? FileManager.default.removeItem(at: url) }
+
+        let summary = try await importer.importArchive(at: url)
+        #expect(summary.playCount == 1)
+    }
+
     @Test("Plays shorter than 30 seconds are not imported")
     func skipsShortPlays() async throws {
         let (importer, store) = makeImporter()

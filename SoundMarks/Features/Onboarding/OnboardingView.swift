@@ -6,6 +6,8 @@ import UniformTypeIdentifiers
 struct OnboardingView: View {
     @Environment(AppEnvironment.self) private var environment
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.openURL) private var openURL
+    @Environment(\.scenePhase) private var scenePhase
 
     @State private var model: OnboardingViewModel?
     @State private var isShowingSpotifyPage = false
@@ -257,31 +259,38 @@ struct OnboardingView: View {
             }
             .padding(.horizontal, 28)
 
-            if model.photoAuthorization == .limited {
-                Text("onboarding.photos.limited", comment: "Limited access is supported")
-                    .font(.footnote)
-                    .foregroundStyle(.secondary)
-                    .multilineTextAlignment(.center)
-                    .padding(.horizontal, 28)
+            switch model.photoAuthorization {
+            case .limited:
+                photoAccessHint("onboarding.photos.limited", systemImage: "exclamationmark.triangle.fill")
+            case .denied, .restricted:
+                photoAccessHint("onboarding.photos.denied", systemImage: "lock.fill")
+            case .notDetermined, .authorized:
+                EmptyView()
             }
 
             Spacer()
 
-            if model.photoAuthorization.allowsReading {
+            switch model.photoAuthorization {
+            case .authorized:
                 primaryButton(titleKey: "common.continue") { model.advance() }
-            } else {
+            case .limited:
+                // iOS asks only once — full access is switched on in Settings.
+                primaryButton(titleKey: "onboarding.photos.allowAll") { openSystemSettings() }
+                secondaryButton(titleKey: "onboarding.photos.continueLimited") { model.advance() }
+            case .denied, .restricted:
+                primaryButton(titleKey: "onboarding.photos.openSettings") { openSystemSettings() }
+                secondaryButton(titleKey: "onboarding.photos.later") { model.advance() }
+            case .notDetermined:
                 primaryButton(titleKey: "onboarding.photos.allow") {
                     Task { await model.requestPhotoAccess() }
                 }
-                Button {
-                    model.advance()
-                } label: {
-                    Text("onboarding.photos.later", comment: "Not now")
-                }
-                .font(.footnote)
+                secondaryButton(titleKey: "onboarding.photos.later") { model.advance() }
             }
         }
         .padding(.bottom, 24)
+        .onChange(of: scenePhase) { _, phase in
+            if phase == .active { Task { await model.refreshPhotoAccess() } }
+        }
         .navigationTitle("")
         .navigationBarTitleDisplayMode(.inline)
     }
@@ -380,6 +389,33 @@ struct OnboardingView: View {
     }
 
     // MARK: - Shared
+
+    private func photoAccessHint(_ key: LocalizedStringKey, systemImage: String) -> some View {
+        Label {
+            Text(key)
+        } icon: {
+            Image(systemName: systemImage)
+                .foregroundStyle(.orange)
+        }
+        .font(.footnote)
+        .foregroundStyle(.secondary)
+        .padding(DS.Spacing.m)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(.quaternary.opacity(0.5), in: RoundedRectangle(cornerRadius: DS.Radius.small, style: .continuous))
+        .padding(.horizontal, 28)
+    }
+
+    private func secondaryButton(titleKey: LocalizedStringKey, action: @escaping () -> Void) -> some View {
+        Button(action: action) {
+            Text(titleKey)
+        }
+        .font(.footnote)
+    }
+
+    private func openSystemSettings() {
+        guard let url = URL(string: UIApplication.openSettingsURLString) else { return }
+        openURL(url)
+    }
 
     private func primaryButton(titleKey: LocalizedStringKey, action: @escaping () -> Void) -> some View {
         Button(action: action) {

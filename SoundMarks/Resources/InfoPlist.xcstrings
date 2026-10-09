@@ -1,198 +1,225 @@
 {
-  "sourceLanguage": "en",
-  "strings": {
-    "NSAppleMusicUsageDescription": {
-      "comment": "Privacy - usage description",
-      "extractionState": "manual",
-      "localizations": {
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Um den gerade laufenden Song zu erkennen und einem Ort hinzuzufügen."
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "To recognize the track that is playing right now and add it to a place."
-          }
-        },
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Чтобы определить трек, который играет сейчас, и добавить его к месту."
+  "sourceLanguage" : "en",
+  "strings" : {
+    "CFBundleDisplayName" : {
+      "comment" : "Bundle display name",
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "SoundMarks"
           }
         }
       }
     },
-    "NSCameraUsageDescription": {
-      "comment": "Privacy - usage description",
-      "extractionState": "manual",
-      "localizations": {
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Um den QR-Code eines Freundes zu scannen und ihn hinzuzufügen."
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "To scan a friend’s QR code and add them."
-          }
-        },
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Чтобы отсканировать QR-код друга и добавить его."
+    "CFBundleName" : {
+      "comment" : "Bundle name",
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "SoundMarks"
           }
         }
       }
     },
-    "NSLocalNetworkUsageDescription": {
-      "comment": "Privacy - usage description",
-      "extractionState": "manual",
-      "localizations": {
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Um Freunde in der Nähe hinzuzufügen und Karten direkt zwischen Telefonen auszutauschen, ohne Server."
+    "NSAppleMusicUsageDescription" : {
+      "comment" : "Privacy - usage description",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Um den gerade laufenden Song zu erkennen und einem Ort hinzuzufügen."
           }
         },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "To add friends nearby and exchange maps directly between phones, without a server."
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "To recognize the track that is playing right now and add it to a place."
           }
         },
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Чтобы добавлять друзей рядом и обмениваться картами напрямую между телефонами, без сервера."
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Щоб визначити трек, який грає зараз, і додати його до місця."
           }
         }
       }
     },
-    "NSLocationAlwaysAndWhenInUseUsageDescription": {
-      "comment": "Privacy - usage description",
-      "extractionState": "manual",
-      "localizations": {
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Um dich an einen Song zu erinnern, wenn du wieder an einem markierten Ort bist, und deine Reiseroute aufzuzeichnen. Dein Standort verlässt das Gerät nie."
+    "NSCameraUsageDescription" : {
+      "comment" : "Privacy - usage description",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Um den QR-Code eines Freundes zu scannen und ihn hinzuzufügen."
           }
         },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "To remind you of a track when you’re back at a marked place and to record your trip route. Your location never leaves the device."
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "To scan a friend’s QR code and add them."
           }
         },
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Чтобы напоминать о треке, когда вы снова оказываетесь в отмеченном месте, и записывать маршрут поездки. Координаты не покидают устройство."
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Щоб відсканувати QR-код друга й додати його."
           }
         }
       }
     },
-    "NSLocationWhenInUseUsageDescription": {
-      "comment": "Privacy - usage description",
-      "extractionState": "manual",
-      "localizations": {
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Um den Ort, an dem du Musik hörst, an deinem aktuellen Standort zu markieren."
+    "NSLocalNetworkUsageDescription" : {
+      "comment" : "Privacy - usage description",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Um Freunde in der Nähe hinzuzufügen und Karten direkt zwischen Telefonen auszutauschen, ohne Server."
           }
         },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "To mark the place where you’re listening to music at your current location."
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "To add friends nearby and exchange maps directly between phones, without a server."
           }
         },
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Чтобы отметить место, где вы слушаете музыку, на текущей геопозиции."
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Щоб додавати друзів поруч і обмінюватися картами напряму між телефонами, без сервера."
           }
         }
       }
     },
-    "NSPhotoLibraryAddUsageDescription": {
-      "comment": "Privacy - usage description",
-      "extractionState": "manual",
-      "localizations": {
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Um eine Ortskarte in deiner Mediathek zu sichern."
+    "NSLocationAlwaysAndWhenInUseUsageDescription" : {
+      "comment" : "Privacy - usage description",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Um dich an einen Song zu erinnern, wenn du wieder an einem markierten Ort bist, und deine Reiseroute aufzuzeichnen. Dein Standort verlässt das Gerät nie."
           }
         },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "To save a place card to your photo library."
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "To remind you of a track when you’re back at a marked place and to record your trip route. Your location never leaves the device."
           }
         },
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Чтобы сохранить карточку места в фотоплёнку."
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Щоб нагадувати про трек, коли ви знову опиняєтеся в позначеному місці, і записувати маршрут поїздки. Координати не залишають пристрій."
           }
         }
       }
     },
-    "NSPhotoLibraryUsageDescription": {
-      "comment": "Privacy - usage description",
-      "extractionState": "manual",
-      "localizations": {
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Um Fotos und Videos an Orte auf der Karte anzuhängen und alte Erinnerungen nach Datum und Aufnahmeort zu finden. Fotos bleiben auf dem Gerät."
+    "NSLocationWhenInUseUsageDescription" : {
+      "comment" : "Privacy - usage description",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Um den Ort, an dem du Musik hörst, an deinem aktuellen Standort zu markieren."
           }
         },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "To attach photos and videos to places on the map and find old memories by the date and location of your shots. Photos stay on the device."
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "To mark the place where you’re listening to music at your current location."
           }
         },
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Чтобы прикрепить фото и видео к местам на карте и найти старые воспоминания по дате и геотегу снимков. Фото остаются на устройстве."
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Щоб позначити місце, де ви слухаєте музику, за поточною геопозицією."
           }
         }
       }
     },
-    "NSUserTrackingUsageDescription": {
-      "comment": "Privacy - usage description",
-      "extractionState": "manual",
-      "localizations": {
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Die App verfolgt dich nicht und nutzt keine Werbe-IDs."
+    "NSPhotoLibraryAddUsageDescription" : {
+      "comment" : "Privacy - usage description",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Um eine Ortskarte in deiner Mediathek zu sichern."
           }
         },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "The app doesn’t track you and doesn’t use advertising identifiers."
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "To save a place card to your photo library."
           }
         },
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Приложение не отслеживает вас и не использует рекламные идентификаторы."
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Щоб зберегти картку місця у фототеку."
           }
         }
       }
+    },
+    "NSPhotoLibraryUsageDescription" : {
+      "comment" : "Privacy - usage description",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Um Fotos und Videos an Orte auf der Karte anzuhängen und alte Erinnerungen nach Datum und Aufnahmeort zu finden. Fotos bleiben auf dem Gerät."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "To attach photos and videos to places on the map and find old memories by the date and location of your shots. Photos stay on the device."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Щоб прикріпити фото й відео до місць на карті та знайти старі спогади за датою й геоміткою знімків. Фото залишаються на пристрої."
+          }
+        }
+      }
+    },
+    "NSUserTrackingUsageDescription" : {
+      "comment" : "Privacy - usage description",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Die App verfolgt dich nicht und nutzt keine Werbe-IDs."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The app doesn’t track you and doesn’t use advertising identifiers."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Застосунок не відстежує вас і не використовує рекламні ідентифікатори."
+          }
+        }
+      }
+    },
+    "SoundMarks" : {
+
     }
   },
-  "version": "1.0"
+  "version" : "1.0"
 }
